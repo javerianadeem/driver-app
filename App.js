@@ -1,76 +1,125 @@
-// App.js
+import 'react-native-gesture-handler';
+import React ,{Component, useEffect} from 'react';
+import { Image, TouchableOpacity,PermissionsAndroid,Platform } from 'react-native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import RNBootSplash from "react-native-bootsplash";
 
-import React, { Component } from 'react';
-import { Alert, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import BackgroundTimer from 'react-native-background-timer';
+import { icons, COLORS, SIZES } from './app/constants';
+import LandingScreen from './app/screens/LandingScreen';
+import LoginScreen from './app/screens/LoginScreen';
+import PushLocation from './app/screens/PushLocation';
 
-import Geolocation from 'react-native-geolocation-service';
+// import AdminNotificationScreen from './app/screens/AdminNotificationScreen';
+// import AdminUpdateFeeScreen from './app/screens/AdminUpdateFeeScreen';
+// import AdminGetFeeScreen from './app/screens/AdminGetFeeScreen';
+
+import {AuthContext} from './app/contexts/AuthContext';
+
+
+const Stack = createStackNavigator();
+
+const theme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    border: "transparent",
+  },
+};
+
 
 export default class App extends Component {
-  state = {
-    location: null,
-  };
-
-  counter = BackgroundTimer.runBackgroundTimer(() => {
-    console.log('Uploading coordinates');
-    Geolocation.getCurrentPosition(
-      (position) => {
-        const location = JSON.stringify(position);
-        console.log(position.coords.latitude);
-        console.log(position.coords.longitude);
-        this.setState({ location });
-
-        //  Api call here
-        async function post_to_api() {
-          const temp = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          };
-          return await fetch('http://40.76.93.155/push_location', {
-            method: 'POST',
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-              time_stamp: position.timestamp,
-              driver_id: '6969696',
-            }),
-          });
-        }
-        const response = post_to_api();
-        console.log(response);
-      },
-
-      (error) => Alert.alert(error.message),
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-    );
-  }, 3000);
-
-  render() {
-    return (
-      <View style={styles.container}>
-        <TouchableOpacity onPress={this.counter}>
-          <Text style={styles.welcome}>Start drive</Text>
-          <Text>Location: {this.state.location}</Text>
-        </TouchableOpacity>
-      </View>
-    );
+  constructor(props){
+    super(props);
+    this.state = {
+      hasMapPermission: false
+    }
   }
-}
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-});
+  async componentDidMount(){
+    this.requestFineLocation();
+    await RNBootSplash.hide({ fade: true });
+  }
+
+  async requestFineLocation(){
+    try {
+      if(Platform.OS === 'android'){
+        const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
+        if(granted === PermissionsAndroid.RESULTS.GRANTED){
+          this.setState({hasMapPermission: true})
+        }
+      }
+      else {
+        this.setState({hasMapPermission:true})
+      } 
+    } catch (err) {
+      console.warn(err);
+    }
+  }
+  render(){
+
+    if (this.state.hasMapPermission){
+  
+  return (
+    <NavigationContainer theme={theme}>
+
+      <Stack.Navigator initialRouteName="LandingScreen">
+        <Stack.Screen
+          name="LandingScreen"
+          // changing here
+          component={LandingScreen}
+          options={{
+            title: "Welcome Wheels",
+            headerShown: false,
+            headerStyle: {
+              backgroundColor: COLORS.white
+            },
+            headerLeft: null,
+            headerRight: () => (
+              <TouchableOpacity
+                style={{ marginRight: SIZES.padding }}
+                onPress={() => console.log("Pressed")}
+              >
+              </TouchableOpacity>
+            ),
+          }}
+        />
+        <Stack.Screen
+          name="LoginScreen"
+          component={LoginScreen}
+          // onPress={() =>console.log("hello")}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="PushLocation"
+          component={PushLocation}
+          options={{ headerShown: false }}
+        />
+        {/* <Stack.Screen
+          name="AdminNotificationScreen"
+          component={AdminNotificationScreen}
+            options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="SignupScreen"
+          component={SignupScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="StudentHomeScreen"
+          component={StudentHomeScreen}
+          options={{ headerShown: false }}
+        /> */}
+    
+        
+      </Stack.Navigator>
+    </NavigationContainer>
+    );
+
+        }
+
+        else return null;
+
+  }
+
+}

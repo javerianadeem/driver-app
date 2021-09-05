@@ -1,0 +1,1 @@
+export const BASE_URL = 'https://st-ned-api.herokuapp.com';
