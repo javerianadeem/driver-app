@@ -74,7 +74,7 @@ const LoginUser = ({ navigation }) => {
           }}
         />
                 <TextInput
-                    label="Driver ID(e.g 11)"
+                    label="Driver id(e.g 11)"
                     returnKeyType="next"
                     value={registrationNumber.value}
                     onChangeText={text => setRegistrationNumber({ value: text, error: '' })}
