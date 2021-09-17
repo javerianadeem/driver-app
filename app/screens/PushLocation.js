@@ -22,14 +22,11 @@ export default class PushLocation extends Component {
         this.setState({ driver_id: this.props.route.params.registration });
   }
 
-  counter = BackgroundTimer.runBackgroundTimer(() => {
-    console.log('Uploading coordinates');
-    
+  counter = BackgroundTimer.runBackgroundTimer(() => {  
     Geolocation.getCurrentPosition(
       (position) => {
         const location = JSON.stringify(position);
-        console.log(position.coords.latitude);
-        console.log(position.coords.longitude);
+        position.id = this.state.driver_id
         this.setState({ location });
 
         //  Api call here
@@ -37,8 +34,8 @@ export default class PushLocation extends Component {
           const temp = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
+
           };
-          
           return await fetch(`${BASE_URL}/push_location`, {
             method: 'POST',
             headers: {
@@ -49,18 +46,19 @@ export default class PushLocation extends Component {
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
               time_stamp: position.timestamp,
-              driver_id: this.state.driver_id,
+              driver_id: position.id,
             }),
           });
+          
         }
         const response = post_to_api();
-        console.log(response);
+        console.log("Successfully posted")
       },
 
       (error) => Alert.alert(error.message),
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
     );
-  }, 3000);
+  }, 10000);
 
   render() {
     return (
